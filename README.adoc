@@ -93,6 +93,86 @@ IDRIS2_PREFIX=/path/to/install idris2 --install idris2-cno.ipkg
 * Idris2 >= 0.6.0
 * `base`, `contrib` packages (included with Idris2)
 
+== API Reference
+
+=== Creating CNOs
+
+[source,idris]
+----
+import CNO
+import CNO.Core
+import CNO.Proof
+
+-- Trivial CNO (recommended for most cases)
+noop : CNO a
+noop = idCNO
+
+-- Custom CNO with manual proof
+myIdentity : CNO Integer
+myIdentity = MkCNO (\x => x) (\x => Refl)
+
+-- CNO from a function that you prove is identity
+fromProof : (f : a -> a) -> ((x : a) -> f x = x) -> CNO a
+fromProof f prf = MkCNO f prf
+----
+
+=== Running CNOs
+
+[source,idris]
+----
+import CNO.Core
+
+-- Apply a CNO (guaranteed to return input)
+result : Integer
+result = runCNO idCNO 42  -- Returns 42
+
+-- Get the proof
+proof : (x : Integer) -> runCNO idCNO x = x
+proof x = cnoProof idCNO x
+----
+
+=== Composing CNOs
+
+[source,idris]
+----
+import CNO.Composition
+
+-- Sequential composition (>>>)
+c1 : CNO Integer
+c1 = idCNO >>> idCNO  -- Still identity
+
+-- Parallel on pairs (***)
+c2 : CNO (Integer, String)
+c2 = idCNO *** idCNO
+
+-- Sum on Either (+++)
+c3 : CNO (Either Integer String)
+c3 = idCNO +++ idCNO
+
+-- N-ary composition
+c4 : CNO Integer
+c4 = composeN 10 idCNO  -- 10x identity = identity
+----
+
+=== Verified CNOs
+
+[source,idris]
+----
+import CNO.Verified
+
+-- Named CNO for debugging
+named : VerifiedCNO Integer
+named = verified "step1" idCNO
+
+-- Chain of CNOs
+chain : CNOChain 3 Integer
+chain = noop "a" :: noop "b" :: noop "c" :: Nil
+
+-- Run chain (proven to be identity)
+runMyChain : Integer -> Integer
+runMyChain = runChain chain
+----
+
 == Why CNOs?
 
 CNOs are useful for:
