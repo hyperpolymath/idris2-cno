@@ -10,8 +10,6 @@ readme = "README.adoc"
 sourcedir = "src"
 
 depends = contrib
-        -- , idris2-echidna  -- Uncomment once installed
-        -- , idris2-dyadt    -- Uncomment once installed
 
 modules = CNO
         , CNO.Core
@@ -21,6 +19,6 @@ modules = CNO
         , CNO.Reversible
         , CNO.Verified
         , CNO.Examples
-        -- Integration modules require external packages:
+        -- Integration modules moved to idris2-dyadt to avoid circular deps:
         -- , CNO.Integration.Dyadt
         -- , CNO.Integration.Echidna
