@@ -1,0 +1,144 @@
+// SPDX-License-Identifier: MPL-2.0
+= idris2-cno Roadmap
+
+This document outlines the development roadmap for idris2-cno.
+
+== Current Status: Scaffolding Complete (55%)
+
+The core library structure is in place with working integration modules.
+
+== Phase 1: Core CNO Types (Target: Q1 2025)
+
+=== Milestone 1.1: Core Types Complete
+* [x] CNO type with proof
+* [x] Identity CNO (idCNO, trivial)
+* [x] Proof extractors (runCNO, cnoProof)
+* [x] Basic examples
+* [ ] Additional proof combinators
+* [ ] More example CNOs
+
+=== Milestone 1.2: Composition
+* [x] Binary composition (compose, >>>>, <<<<)
+* [x] Parallel composition (***)
+* [x] Sum composition (+++)
+* [x] N-ary composition (composeAll, composeN)
+* [ ] Arrow-style composition
+* [ ] Kleisli-style composition
+
+=== Milestone 1.3: Category Laws
+* [x] Left identity proof
+* [x] Right identity proof
+* [x] Associativity proof
+* [ ] Formal category instance
+* [ ] Functor instance
+
+== Phase 2: Category Theory Formalization (Target: Q2 2025)
+
+=== Milestone 2.1: Categorical Structure
+* [ ] Category typeclass instance
+* [ ] Functor instance for CNO
+* [ ] Monad instance for CNO
+* [ ] Arrow instance
+
+=== Milestone 2.2: Monoidal Category
+* [ ] Tensor product (parallel composition)
+* [ ] Unit object
+* [ ] Associator and unitors
+* [ ] Braiding (symmetric monoidal)
+
+=== Milestone 2.3: Special Categories
+* [ ] Trivial category formalization
+* [ ] Discrete category structure
+* [ ] Connection to groupoids
+
+== Phase 3: Proof Porting (Target: Q3 2025)
+
+=== Milestone 3.1: Port from absolute-zero
+* [ ] Coq proofs → Idris2
+* [ ] Lean 4 proofs → Idris2
+* [ ] Agda proofs → Idris2
+* [ ] Document translation techniques
+
+=== Milestone 3.2: Native Idris2 Proofs
+* [ ] Eliminate believe_me where possible
+* [ ] Add rewrite rules for common patterns
+* [ ] Optimize proof terms
+
+=== Milestone 3.3: External Proof Integration
+* [ ] Complete echidna integration
+* [ ] Proof certificate format
+* [ ] Proof validation
+
+== Phase 4: Production Ready (Target: Q4 2025)
+
+=== Milestone 4.1: Testing & Quality
+* [ ] Property-based tests
+* [ ] Integration tests
+* [ ] Performance benchmarks
+* [ ] Memory optimization
+
+=== Milestone 4.2: Documentation
+* [ ] Complete API documentation
+* [ ] Category theory tutorial
+* [ ] Best practices guide
+* [ ] THEORY.adoc mathematical foundations
+
+=== Milestone 4.3: Distribution
+* [ ] Package on Idris2 package registry
+* [ ] CI/CD pipeline
+* [ ] Release automation
+
+== Future Considerations
+
+=== Potential Features
+* Higher CNOs (CNO on CNO)
+* Natural transformations between CNO functors
+* Proof search for CNO construction
+* GUI for proof visualization
+
+=== Research Directions
+* Connection to reversible computing
+* Information-theoretic properties
+* Applications in cryptography
+* Formal methods education
+
+== Theory Background
+
+=== What is a CNO?
+
+A CNO (Certified Null Operation) is:
+
+1. A function `f : A → A`
+2. With proof `∀x ∈ A. f(x) = x`
+
+This means CNOs are exactly the identity morphisms in the category of types.
+
+=== Why are CNOs Useful?
+
+* **Composition closure**: CNO composed with CNO is CNO
+* **Reversibility**: Every CNO is its own inverse
+* **Type-level proof**: Verification happens at compile time
+* **No runtime cost**: CNOs can be optimized away
+
+=== Mathematical Foundation
+
+CNOs form the **trivial category**:
+
+* Objects: Types
+* Morphisms: Only identity morphisms exist
+* Composition: id ∘ id = id
+
+This is isomorphic to the discrete category on types.
+
+== Version History
+
+[cols="1,1,3"]
+|===
+|Version |Date |Notes
+
+|0.1.0 |2025-01-17 |Initial scaffold with core structure
+|===
+
+== Contributing
+
+See CONTRIBUTING.adoc for guidelines on contributing to this project.

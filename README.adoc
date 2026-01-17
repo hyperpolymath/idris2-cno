@@ -1,0 +1,233 @@
+// SPDX-License-Identifier: MPL-2.0
+= idris2-cno
+
+image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
+image:https://img.shields.io/badge/Philosophy-Palimpsest-purple.svg[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-licence"]
+image:https://img.shields.io/badge/Idris2-0.6+-blue.svg[Idris2]
+image:https://img.shields.io/badge/Status-Scaffolding-yellow.svg[Status]
+
+**Certified Null Operations in Idris2 Dependent Types**
+
+A CNO is an operation that provably has no effect - the identity transformation encoded as a type with proof obligations. This library brings the https://github.com/hyperpolymath/absolute-zero[absolute-zero] formal verification concepts to Idris2's dependent type system.
+
+== The Key Insight
+
+A Certified Null Operation (CNO) bundles:
+
+1. A function `f : a -> a`
+2. A proof that `∀x. f(x) = x`
+
+[source,idris]
+----
+data CNO : Type -> Type where
+  MkCNO : (f : a -> a) -> (prf : (x : a) -> f x = x) -> CNO a
+----
+
+If you can construct a `CNO a`, you have **compile-time proof** that the operation is identity.
+
+== Quick Start
+
+[source,idris]
+----
+import CNO
+
+-- The trivial CNO (literally id with Refl)
+noop : CNO Integer
+noop = trivial
+
+-- A "complex" CNO that adds zero
+addZero : CNO Integer
+addZero = MkCNO (\x => x + 0) (\x => plusZeroProof x)
+
+-- Compose CNOs (result is also identity)
+composed : CNO Integer
+composed = noop . addZero
+
+-- Apply (always returns the same value)
+result : Integer
+result = apply noop 42  -- Returns 42, proven at compile time
+----
+
+== Installation
+
+[source,bash]
+----
+# Clone the repository
+git clone https://github.com/hyperpolymath/idris2-cno.git
+cd idris2-cno
+
+# Build and install
+idris2 --install idris2-cno.ipkg
+----
+
+== Why CNOs?
+
+CNOs are useful for:
+
+[cols="1,2"]
+|===
+|Use Case |Description
+
+|**Middleware placeholders**
+|Type-safe no-ops in middleware chains
+
+|**Disabled features**
+|Features that compile to nothing when disabled
+
+|**Reversible operations**
+|Operations that are their own inverse
+
+|**Proof of no side effects**
+|Guarantee a transformation preserves values
+
+|**Testing**
+|Verify that "do nothing" actually does nothing
+|===
+
+== Composition
+
+CNOs compose while preserving the identity property:
+
+[source,idris]
+----
+-- Sequential composition
+c1 >>> c2 : CNO a
+
+-- Backward composition
+c1 <<< c2 : CNO a
+
+-- Parallel composition on pairs
+c1 *** c2 : CNO (a, b)
+
+-- Sum composition on Either
+c1 +++ c2 : CNO (Either a b)
+
+-- N-ary composition
+composeAll : List (CNO a) -> CNO a
+composeN : Nat -> CNO a -> CNO a  -- Apply n times (still identity!)
+----
+
+== Categorical Structure
+
+CNOs form a trivial category where every morphism is the identity:
+
+[source,idris]
+----
+-- All CNOs are isomorphisms (they're their own inverse)
+inverse : CNO a -> CNO a
+inverse cno = cno  -- A CNO is its own inverse!
+
+-- Category laws hold trivially
+leftIdentity : id . f = f  ✓
+rightIdentity : f . id = f  ✓
+associativity : (f . g) . h = f . (g . h)  ✓
+----
+
+== Ecosystem Integration
+
+idris2-cno is part of the hyperpolymath Idris2 verification stack:
+
+[source]
+----
+┌─────────────────────────────────────────────────────────────┐
+│                    Your Application                          │
+└─────────────────────────────────────────────────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+    ┌─────────┐           ┌─────────────┐         ┌─────────┐
+    │idris2-  │           │ idris2-     │         │idris2-  │
+    │ dyadt   │──────────►│ echidna     │◄────────│  cno    │
+    │(claims) │           │ (provers)   │         │(CNOs)   │
+    └─────────┘           └─────────────┘         └─────────┘
+----
+
+=== With idris2-dyadt (Claims)
+
+[source,idris]
+----
+import CNO
+import CNO.Integration.Dyadt
+
+-- Express CNO properties as dyadt claims
+cnoClaim : CNODyadtClaim
+cnoClaim = CNOIsValid "myTransform"
+
+-- Verify and get a dyadt-verified CNO
+verified : DyadtVerifiedCNO Integer
+verified = dyadtVerify "addZero" addZero
+
+-- Run with verification
+result : Integer
+result = runDyadtVerified verified 42
+----
+
+=== With idris2-echidna (Theorem Proving)
+
+[source,idris]
+----
+import CNO
+import CNO.Integration.Echidna
+
+-- Generate a theorem for proving CNO property
+thm : CNOTheorem
+thm = identityTheorem "myFunc" "Int"
+
+-- Create proof obligation
+obligation : ProofObligation
+obligation = ProveIdentity "transform" "Int"
+
+-- Proof-carrying CNO with external proof reference
+proven : ProofCarryingCNO Integer
+proven = withExternalProof idCNO "z3_proof_hash" "Z3" [obligation]
+----
+
+== Example CNOs
+
+[source,idris]
+----
+import CNO.Examples
+
+-- Numeric CNOs
+addZero : CNO Integer      -- x + 0 = x
+multiplyOne : CNO Integer  -- x * 1 = x
+
+-- List CNOs
+appendNil : CNO (List a)      -- xs ++ [] = xs
+reverseReverse : CNO (List a) -- reverse (reverse xs) = xs
+
+-- Maybe CNOs
+mapIdMaybe : CNO (Maybe a)  -- map id = id
+
+-- Pair CNOs
+swapSwap : CNO (a, b)  -- swap (swap p) = p
+----
+
+== VerifiedCNO and CNOChain
+
+[source,idris]
+----
+import CNO.Verified
+
+-- Verified CNO with name
+vcno : VerifiedCNO Integer
+vcno = verified "step1" idCNO
+
+-- Chain of verified CNOs
+chain : CNOChain 3 Integer
+chain = noop "a" :: noop "b" :: noop "c" :: Nil
+
+-- Run chain (still identity!)
+runChain chain x = x  -- Proven!
+----
+
+== Related Projects
+
+* https://github.com/hyperpolymath/absolute-zero[absolute-zero] - Formal CNO proofs in Coq, Lean 4, Agda, Isabelle, Mizar
+* https://github.com/hyperpolymath/aletheia[aletheia] - Reversible operations research
+* https://github.com/hyperpolymath/idris2-dyadt[idris2-dyadt] - Compile-time verified claims
+* https://github.com/hyperpolymath/idris2-echidna[idris2-echidna] - ECHIDNA theorem prover bindings
+* https://github.com/hyperpolymath/did-you-actually-do-that[did-you-actually-do-that] - Runtime verification (Rust)
+
+== License
+
+MPL-2.0. See link:LICENSE[LICENSE] for details.
