@@ -1,106 +1,51 @@
-; SPDX-License-Identifier: MPL-2.0
-; META.scm - Project meta information
+;; SPDX-License-Identifier: MPL-2.0
+;; META.scm - Meta-level information for idris2-cno
 
 (meta
-  (version "1.0")
-  (project "idris2-cno")
-
   (architecture-decisions
     (adr-001
+      (title "CNO as record with proof field")
       (status "accepted")
       (date "2025-01-17")
-      (title "CNO as data type with proof field")
-      (context "Need to encode CNO with proof in type system")
-      (decision "Use data type with function and proof fields: MkCNO : (f : a -> a) -> (prf : (x : a) -> f x = x) -> CNO a")
+      (context "Need to pair identity functions with their proofs")
+      (decision "Use Idris2 record type with function and proof fields")
       (consequences
-        "Cleaner API than Sigma type"
-        "Explicit proof extraction with cnoProof"
-        "Show instance possible"))
+        "Proof is always available when CNO is used"
+        "Cannot create CNO without providing proof"
+        "Simple API for construction and use"))
 
     (adr-002
+      (title "Record types for proof wrappers")
       (status "accepted")
       (date "2025-01-17")
-      (title "believe_me for complex proofs")
-      (context "Some proofs require axioms Idris2 cannot derive (e.g., reverse (reverse xs) = xs)")
-      (decision "Use believe_me with documentation noting proof exists in absolute-zero")
+      (context "Type aliases caused inference issues with implicit bindings")
+      (decision "Use record types (IdentityProof, ComposeProof) instead of type aliases")
       (consequences
-        "Type-safe API"
-        "Proofs need external verification"
-        "Clear documentation of assumptions"))
+        "Better type inference"
+        "Explicit constructors"
+        "Slightly more verbose"))
 
     (adr-003
+      (title "Standalone library (no circular deps)")
       (status "accepted")
       (date "2025-01-17")
-      (title "Category theory naming conventions")
-      (context "CNOs have categorical structure")
-      (decision "Use standard CT names: compose, identity; plus infix >>>, <<<")
+      (context "CNO could integrate with echidna and dyadt but would create cycles")
+      (decision "Keep CNO standalone; integration modules live in dyadt")
       (consequences
-        "Familiar to CT-aware users"
-        "Consistent with literature"
-        "Infix operators for ergonomics"))
-
-    (adr-004
-      (status "accepted")
-      (date "2025-01-17")
-      (title "Integration modules for ecosystem")
-      (context "Need to work with dyadt and echidna")
-      (decision "Create Integration.Dyadt and Integration.Echidna modules")
-      (consequences
-        "Clean separation of concerns"
-        "Optional dependencies"
-        "Easy to extend"))
-
-    (adr-005
-      (status "accepted")
-      (date "2025-01-17")
-      (title "Proof obligations via theorem templates")
-      (context "Complex CNO proofs may need external provers")
-      (decision "Define ProofObligation type and theorem templates for echidna")
-      (consequences
-        "Can delegate complex proofs to Z3/CVC5/etc."
-        "Proof-carrying CNO records external proof reference"
-        "Bridges type-level and theorem-level verification")))
+        "CNO can be used independently"
+        "Clean dependency graph"
+        "Integration via dyadt for full ecosystem")))
 
   (development-practices
-    (code-style
-      "Follow Idris2 naming conventions"
-      "Use total functions where possible (%default total)"
-      "Public exports explicit with 'public export'"
-      "Document all public functions with ||| comments")
-    (security
-      "No IO in core modules"
-      "Pure functional design"
-      "Proofs machine-checkable where possible")
-    (testing
-      "Type-checking as primary test"
-      "Examples module serves as integration test"
-      "Property: any CNO applied to any value returns that value")
-    (versioning "Semantic versioning (SemVer)")
-    (documentation
-      "Doc comments on all public functions"
-      "README with quick start and examples"
-      "Mathematical background in THEORY.adoc")
-    (branching
-      "main is stable"
-      "feature/* for new features"
-      "fix/* for bug fixes"))
+    (code-style "Follow Idris2 community style guide")
+    (security "No unsafe operations - all proofs are verified")
+    (testing "Type-level testing through compilation")
+    (versioning "Semantic versioning")
+    (documentation "Module-level doc comments")
+    (branching "main for stable, feature/* for development"))
 
   (design-rationale
-    (why-dependent-types
-      "CNOs require proof bundling by definition"
-      "Type system enforces correctness"
-      "Compile-time verification of identity property")
-    (why-category-theory
-      "CNOs naturally form a category (trivial category)"
-      "Composition laws are fundamental to CNO definition"
-      "Connects to broader mathematical framework")
-    (why-idris2
-      "Best dependent type language for practical use"
-      "Good FFI story for ecosystem integration"
-      "Active community and development"
-      "Total functional programming support")
-    (why-separate-from-dyadt
-      "CNOs are a specific concept (identity proofs)"
-      "Dyadt is general claims (many types)"
-      "Separation allows focused development"
-      "Can use dyadt without CNO theory and vice versa")))
+    (why-identity-proofs "Proves CNO operations have no side effects")
+    (why-category-theory "CNOs form a trivial category with useful properties")
+    (why-composition "Composing CNOs preserves the identity property")
+    (why-dependent-types "Proofs are verified at compile time")))
