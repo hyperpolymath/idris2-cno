@@ -146,3 +146,162 @@ public export
 disabledFeature : CNO a
 disabledFeature = idCNO
 
+-------------------------------------------------------------------
+-- Forward/Backward Composition
+-------------------------------------------------------------------
+
+||| Chain operations left-to-right (all are identity anyway)
+public export
+pipeline : CNO Integer
+pipeline = addZero >>> multiplyOne >>> idCNO
+
+||| Chain operations right-to-left
+public export
+composedChain : CNO Integer
+composedChain = idCNO <<< multiplyOne <<< addZero
+
+-------------------------------------------------------------------
+-- Conditional CNOs
+-------------------------------------------------------------------
+
+||| A feature that might be enabled or disabled (always CNO)
+public export
+maybeFeature : Bool -> CNO a
+maybeFeature True = idCNO    -- Feature "enabled" (does nothing)
+maybeFeature False = idCNO   -- Feature "disabled" (does nothing)
+
+||| Choose between two CNOs (both are identity anyway)
+public export
+chooseOperation : Either () () -> CNO a
+chooseOperation (Left _) = idCNO
+chooseOperation (Right _) = idCNO
+
+-------------------------------------------------------------------
+-- Type Transformations
+-------------------------------------------------------------------
+
+||| Nest a CNO inside Maybe
+public export
+nestedMaybe : CNO a -> CNO (Maybe a)
+nestedMaybe cno = mapIdMaybe
+
+||| CNO on nested structure
+public export
+nestedList : CNO (List (Maybe a))
+nestedList = MkCNO id (\xs => Refl)
+
+-------------------------------------------------------------------
+-- Reversible Patterns
+-------------------------------------------------------------------
+
+||| Reverse twice on nested lists
+public export
+doubleReverseNested : CNO (List (List a))
+doubleReverseNested = MkCNO (\xs => reverse (reverse xs)) (\xs => believe_me (Refl {x = xs}))
+
+||| Identity on triple (rotation example simplified)
+public export
+tripleId : CNO (a, a, a)
+tripleId = MkCNO id (\_ => Refl)
+
+-------------------------------------------------------------------
+-- Domain-Specific CNO Patterns
+-------------------------------------------------------------------
+
+||| A "sanitizer" that doesn't change the input
+public export
+nullSanitizer : CNO String
+nullSanitizer = idCNO
+
+||| A "normalizer" that normalizes nothing
+public export
+nullNormalizer : CNO a
+nullNormalizer = idCNO
+
+||| A "compressor" that doesn't compress
+public export
+nullCompressor : CNO a
+nullCompressor = idCNO
+
+||| A "serializer" that returns the same data
+public export
+nullSerializer : CNO a
+nullSerializer = idCNO
+
+-------------------------------------------------------------------
+-- Proof Examples
+-------------------------------------------------------------------
+
+||| Prove that addZero is identity
+public export
+addZeroIsId : (x : Integer) -> runCNO Examples.addZero x = x
+addZeroIsId x = cnoProof Examples.addZero x
+
+||| Prove that composition is identity
+public export
+composeIsId : (x : Integer) -> runCNO (compose Examples.addZero Examples.multiplyOne) x = x
+composeIsId x = cnoProof (compose Examples.addZero Examples.multiplyOne) x
+
+||| Prove that parallel composition preserves pairs
+public export
+parallelPreserves : (x : Integer) -> (xs : List a) ->
+                    runCNO (Examples.addZero *** Examples.appendNil) (x, xs) = (x, xs)
+parallelPreserves x xs = cnoProof (Examples.addZero *** Examples.appendNil) (x, xs)
+
+-------------------------------------------------------------------
+-- Sum Type Examples
+-------------------------------------------------------------------
+
+||| CNO on Either Integer String
+public export
+eitherCNO : CNO (Either Integer String)
+eitherCNO = idCNO +++ idCNO
+
+||| Process either side identically
+public export
+eitherProcess : Either Integer Integer -> Either Integer Integer
+eitherProcess = runCNO (addZero +++ multiplyOne)
+
+-------------------------------------------------------------------
+-- Higher-Order CNO
+-------------------------------------------------------------------
+
+||| CNO that maps identity over a functor (if we had Functor)
+public export
+mapIdList : CNO (List a)
+mapIdList = MkCNO (map id) mapIdIsId
+  where
+    mapIdIsId : (xs : List a) -> map Prelude.id xs = xs
+    mapIdIsId [] = Refl
+    mapIdIsId (x :: xs) = cong (x ::) (mapIdIsId xs)
+
+-------------------------------------------------------------------
+-- Real-World Pattern: Middleware
+-------------------------------------------------------------------
+
+||| A middleware chain where all middlewares are CNOs
+public export
+middlewareChain : CNO a
+middlewareChain = composeAll [idCNO, idCNO, idCNO, idCNO]
+
+||| Example: logging middleware that logs nothing
+public export
+loggingMiddleware : CNO a
+loggingMiddleware = nullLog
+
+||| Example: auth middleware that accepts everything
+public export
+noopAuthMiddleware : CNO a
+noopAuthMiddleware = idCNO
+
+||| Example: rate limiter that limits nothing
+public export
+noopRateLimiter : CNO a
+noopRateLimiter = idCNO
+
+||| Complete middleware stack
+public export
+fullMiddlewareStack : CNO a
+fullMiddlewareStack = loggingMiddleware >>> noopAuthMiddleware >>> noopRateLimiter
+
+
