@@ -50,6 +50,31 @@ result = apply noop 42  -- Returns 42, proven at compile time
 
 == Installation
 
+=== Using Pack (Recommended)
+
+The easiest way to install is using https://github.com/stefan-hoeck/idris2-pack[pack]:
+
+[source,bash]
+----
+# Install from local clone
+git clone https://github.com/hyperpolymath/idris2-cno.git
+cd idris2-cno
+pack install idris2-cno
+----
+
+Or add to your project's `pack.toml`:
+
+[source,toml]
+----
+[custom.all.idris2-cno]
+type   = "github"
+url    = "https://github.com/hyperpolymath/idris2-cno"
+commit = "main"
+ipkg   = "idris2-cno.ipkg"
+----
+
+=== Manual Installation
+
 [source,bash]
 ----
 # Clone the repository
@@ -58,7 +83,15 @@ cd idris2-cno
 
 # Build and install
 idris2 --install idris2-cno.ipkg
+
+# Or install to custom location
+IDRIS2_PREFIX=/path/to/install idris2 --install idris2-cno.ipkg
 ----
+
+=== Dependencies
+
+* Idris2 >= 0.6.0
+* `base`, `contrib` packages (included with Idris2)
 
 == Why CNOs?
 
